@@ -1,40 +1,56 @@
 # Security Policy
 
+Quadrama takes security seriously.
+
+If you discover a potential vulnerability, please report it responsibly.
+
+---
+
+## Reporting a Vulnerability
+
+Please report security issues privately:
+
+Email: security@quadrama.ch
+
+Do not disclose vulnerabilities publicly before a fix is available.
+
+---
+
 ## Scope
-Quadrama is a live end-to-end encrypted messaging service with real users.
 
-This repository contains documentation, protocol notes, and threat modeling
-only. It does NOT contain production infrastructure, credentials,
-or full source code.
+In scope:
 
-Only the materials explicitly present in this repository are in scope
-for review and discussion.
+- Protocol authentication issues
+- Replay or downgrade vulnerabilities
+- Cryptographic misuse
+- Identity verification bypass
+- Confidentiality or integrity failures
+- Session validation issues
 
-## Authorized Testing
-No testing, probing, scanning, fuzzing, exploitation attempts, or
-traffic analysis against live systems, servers, networks, or user
-accounts is authorized by this repository.
+Out of scope:
 
-Any security testing against production systems requires explicit
-written permission from the Quadrama team.
+- Denial-of-service without security impact
+- Issues requiring a fully compromised client device
+- Attacks that depend on malware or browser exploitation
+- Theoretical weaknesses without practical exploitability
 
-## Reporting Vulnerabilities
-If you believe you have discovered a security issue related to Quadrama,
-please report it responsibly:
+---
 
-- Email: security@quadrama.ch
-- Please do NOT open public GitHub issues for sensitive vulnerabilities.
-- Include clear reproduction steps, affected components, and
-  potential impact where possible.
+## Responsible Disclosure Process
 
-## Disclosure Process
-We aim to acknowledge reports within a reasonable time frame and
-will coordinate responsible disclosure with the reporter.
+1. Submit a private report with detailed reproduction steps.
+2. Include logs or proof-of-concept if available.
+3. Allow reasonable time for investigation and mitigation.
+4. Public disclosure may be coordinated after remediation.
 
-Public disclosure without prior coordination may put users at risk
-and is strongly discouraged.
+---
 
-## Legal
-Unauthorized testing of live systems may be illegal in many jurisdictions.
-Nothing in this repository grants permission to bypass safeguards,
-reverse engineer protected systems, or attempt exploitation.
+## Cryptographic Disclosure Note
+
+Quadrama publicly documents its high-level security architecture.
+
+Implementation-specific parameters and internal hardening logic are not disclosed publicly.
+
+---
+
+Thank you for helping improve Quadrama’s security.
