@@ -1,15 +1,47 @@
-# Quadrama – Security & Protocol Documentation
+# Quadrama
 
-This repository contains security documentation, threat modeling,
-and selected protocol and design notes for Quadrama, a live
-end-to-end encrypted messaging service.
+Quadrama is a secure 1:1 messaging protocol designed for end-to-end encrypted communication over an untrusted relay.
 
-This repository does NOT contain full production source code,
-deployment details, or infrastructure configurations.
+The system focuses on strong cryptographic guarantees, minimal exposure, and user-verifiable identity binding.
 
-The purpose of this repository is transparency, peer discussion
-of design decisions, and responsible security review of documented
-mechanisms only.
+---
 
-No authorization is granted to test, probe, scan, or attack any
-live Quadrama systems, servers, networks, or user accounts.
+## Security at a Glance
+
+- End-to-end encryption (E2EE)
+- Authenticated key exchange
+- Forward secrecy
+- Post-compromise security (ratcheting)
+- Replay protection
+- User-verifiable safety codes
+- Strict validation after verification
+
+The relay server cannot access plaintext messages.
+
+---
+
+## Documentation
+
+High-level protocol overview:
+- [`docs/protocol.md`](docs/protocol.md)
+
+Replay protection overview:
+- [`docs/replay-protection.md`](docs/replay-protection.md)
+
+Threat model:
+- [`THREAT_MODEL.md`](THREAT_MODEL.md)
+
+Security reporting:
+- [`SECURITY.md`](SECURITY.md)
+
+---
+
+## Design Philosophy
+
+Quadrama intentionally exposes only high-level protocol information publicly.
+
+Implementation details, internal hardening logic, and security parameters are not part of the public specification.
+
+---
+
+© Quadrama
