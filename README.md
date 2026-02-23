@@ -1,12 +1,14 @@
-# Quadrama – Security & Protocol Notes
+# Quadrama – Security & Protocol Documentation
 
 This repository contains security documentation, threat modeling,
-and selected protocol design notes for Quadrama, a live end-to-end
-encrypted messaging service.
+and selected protocol and design notes for Quadrama, a live
+end-to-end encrypted messaging service.
 
-This repository does NOT contain full production source code.
+This repository does NOT contain full production source code,
+deployment details, or infrastructure configurations.
 
-Its purpose is transparency, peer review of design decisions,
-and responsible security discussion.
+The purpose of this repository is transparency, peer discussion
+of design decisions, and responsible security review.
 
-No authorization is granted to test or attack live systems.
+No authorization is granted to test, probe, scan, or attack any
+live Quadrama systems or user accounts.
