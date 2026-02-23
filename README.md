@@ -8,7 +8,8 @@ This repository does NOT contain full production source code,
 deployment details, or infrastructure configurations.
 
 The purpose of this repository is transparency, peer discussion
-of design decisions, and responsible security review.
+of design decisions, and responsible security review of documented
+mechanisms only.
 
 No authorization is granted to test, probe, scan, or attack any
-live Quadrama systems or user accounts.
+live Quadrama systems, servers, networks, or user accounts.
