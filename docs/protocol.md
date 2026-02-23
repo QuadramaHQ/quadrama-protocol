@@ -1,152 +1,109 @@
-# Protocol Overview – Quadrama
+# Quadrama Protocol (High-Level Overview)
 
-This document describes the Quadrama end-to-end encrypted messaging
-protocol at a conceptual level.
+This document describes the public, high-level design of the Quadrama messaging protocol.
 
-It is intended for transparency, security review, and technical discussion.
-Implementation-specific details are deliberately omitted.
+Implementation details, internal state machines, and parameter values are intentionally omitted.
 
 ---
 
-## 1. Overview
+## 1. Goals
 
-Quadrama is an asynchronous end-to-end encrypted messaging system designed
-for operation in hostile network environments.
+Quadrama is designed to provide:
 
-Primary goals include:
+- End-to-end encrypted 1:1 communication
+- Authenticated key agreement between peers
+- Forward secrecy
+- Post-compromise security (ratcheting)
+- Replay protection
+- User-verifiable identity binding
+- Strict validation after trust establishment
 
-- Confidentiality of message contents
-- Forward secrecy and post-compromise security
-- Integrity and authenticity of messages
-- Resistance to replay and downgrade attacks
-- Clear separation of sessions and communication channels
-
-The protocol assumes an attacker capable of observing, delaying,
-reordering, replaying, and modifying network traffic.
+The relay server is considered untrusted.
 
 ---
 
-## 2. Identities and Key Material
+## 2. Architecture
 
-Each client maintains the following cryptographic material:
+Quadrama follows a client-to-client encryption model.
 
-- A long-term identity key
-- Ephemeral session keys
-- Ratchet-derived message keys
+- Clients establish a shared secret using authenticated key exchange.
+- After key agreement, all messages are encrypted and authenticated.
+- The relay server only forwards opaque ciphertext.
+- The server does not possess session keys.
 
-Long-term identity keys are used exclusively for authentication
-and trust establishment.
-
-Message encryption is never performed directly using long-term keys.
+The protocol is transport-agnostic. Current deployments use WebSockets as a relay channel.
 
 ---
 
-## 3. Session Establishment (Conceptual Handshake)
+## 3. Handshake Phase
 
-The establishment of a new session follows these high-level steps:
+During session initialization:
 
-1. Exchange of public identity information
-2. Ephemeral key agreement for session creation
-3. Derivation of shared secrets
-4. Initialization of ratchet state
+1. Each client generates ephemeral key material.
+2. An authenticated key exchange establishes shared session secrets.
+3. A verification phase binds the session to user identities.
+4. Once verification is complete, strict validation rules are enforced.
 
-The handshake is designed such that:
-
-- Compromise of past sessions does not affect new sessions
-- Key material is not reused across sessions
-- Future key compromise does not reveal past message contents
+After successful key agreement, message ratcheting begins.
 
 ---
 
-## 4. Message Encryption and Authentication
+## 4. Message Protection
 
-Each message is processed as follows:
+All application messages are:
 
-- A fresh encryption key is derived from the ratchet state
-- The message is encrypted using authenticated encryption
-- Ciphertexts are bound to their session and channel context
+- Encrypted
+- Authenticated
+- Bound to the current session context
 
-This ensures that:
-
-- Only intended recipients can decrypt messages
-- Message tampering is detected
-- Messages cannot be replayed across sessions or channels
+Messages that fail authentication or session validation are rejected.
 
 ---
 
-## 5. Replay Protection
+## 5. Ratcheting
 
-Protocol state is updated only **after successful message
-authentication and decryption**.
+Quadrama uses a ratcheting mechanism to ensure:
 
-This prevents:
+- Forward secrecy (past messages remain secure if keys are compromised)
+- Post-compromise recovery (future messages become secure again after new key exchange)
 
-- State advancement from invalid or replayed ciphertexts
-- Replay cascades caused by packet reordering
-- Ratchet desynchronization attacks
+Exact ratchet internals are implementation details.
 
 ---
 
-## 6. Key Confirmation and Trust Gating
+## 6. Identity Verification
 
-Key confirmation is performed only after explicit trust establishment.
+Users may compare a short “Safety Code” out-of-band.
 
-Once trust is established:
+After manual verification:
 
-- Downgrade paths are disabled
-- Legacy or fallback protocol modes are no longer accepted
-- All messages must satisfy strict authentication requirements
+- Strict validation is activated
+- Downgrade attempts are rejected
+- Session binding becomes mandatory
 
-This design prevents silent downgrade or reflection attacks
-after a trust relationship is formed.
-
----
-
-## 7. Session and Channel Binding
-
-All encrypted messages are cryptographically bound to:
-
-- A specific session
-- A specific communication channel
-
-This binding prevents cross-session and cross-channel
-message injection and confusion attacks.
+If a peer’s identity key changes, verification is automatically removed.
 
 ---
 
-## 8. Metadata Considerations
+## 7. Replay and Ordering
 
-While message contents are protected end-to-end, certain metadata
-cannot be fully eliminated.
+Quadrama includes replay protection mechanisms.
 
-The protocol incorporates mitigations such as:
+Replayed, duplicated, or malformed messages are rejected.
 
-- Message padding
-- Controlled message sizing
-- Optional cover traffic mechanisms
-
-Trade-offs between latency, bandwidth usage, and metadata protection
-are explicitly acknowledged.
+Handling of out-of-order messages is implementation-specific.
 
 ---
 
-## 9. Non-Goals
+## 8. Security Philosophy
 
-The protocol does NOT aim to provide:
+Quadrama follows a minimal exposure approach:
 
-- Anonymity against global passive adversaries
-- Resistance to nation-state scale traffic correlation
-- Protection against compromised endpoints
-- Defense against denial-of-service attacks
+- Public documentation explains security goals and principles.
+- Sensitive implementation details are not publicly disclosed.
+- Clients enforce strict validation after trust is established.
 
 ---
 
-## 10. Scope and Limitations
-
-This document describes protocol concepts only.
-
-It does not grant authorization to test, probe, or attack
-any live Quadrama systems or user accounts.
-
-Security testing of production systems requires explicit
-written permission.
+This document describes the conceptual design only.
+It is not a formal cryptographic specification.
