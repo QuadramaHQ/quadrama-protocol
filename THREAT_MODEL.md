@@ -55,7 +55,7 @@ Quadrama does **not** attempt to protect against:
 
 - Malware or keyloggers on the client device
 - Compromised operating systems
-- Browser-level code injection (XSS)
+- **Browser-level code injection (XSS)** – a general risk for all web-based applications, not specific to Quadrama
 - Social engineering attacks
 - Physical device seizure without OS-level encryption
 - Traffic analysis by a global passive adversary
