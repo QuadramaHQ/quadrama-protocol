@@ -28,9 +28,6 @@ The relay server **cannot access plaintext messages** at any point.
 - **Replay protection overview:**  
   [`docs/replay-protection.md`](docs/replay-protection.md)
 
-- **Threat model:**  
-  [`THREAT_MODEL.md`](THREAT_MODEL.md)
-
 - **Security reporting:**  
   [`SECURITY.md`](SECURITY.md)
 
