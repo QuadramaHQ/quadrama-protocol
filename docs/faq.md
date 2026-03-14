@@ -1,84 +1,45 @@
 # Frequently Asked Questions (FAQ)
 
 ## What is Quadrama?
-
-Quadrama is a secure 1:1 messaging protocol designed for end-to-end encrypted communication over an untrusted relay server.
-
----
+Quadrama is a secure 1:1 messaging application with end-to-end encryption.
 
 ## Can the server read my messages?
-
-No.
-
-Messages are encrypted end-to-end between clients.
-The relay server only forwards encrypted data and does not possess session keys.
-
----
+No.  
+Messages are encrypted on your device and can only be decrypted by the recipient. The server only forwards encrypted data.
 
 ## What is a Safety Code?
-
-The Safety Code is a short representation of the cryptographic identity binding between two peers.
-
-By comparing the Safety Code out-of-band (e.g., in person or via a trusted channel), users can verify that no active attacker is intercepting the connection.
-
----
+The Safety Code is a short representation of the cryptographic identity binding between two peers.  
+By comparing it out-of-band, users can verify that the connection is secure.
 
 ## What does “Verify” mean?
-
-When you verify a peer:
-
-- The client enforces strict validation rules.
-- Downgrade attempts are rejected.
-- Session binding becomes mandatory.
-
-If the peer’s identity key changes, verification is automatically removed.
-
----
+Verifying a peer confirms their identity. Once verified, the client enforces stricter security rules.  
+If the peer’s identity key ever changes, verification is automatically removed.
 
 ## What happens if a peer’s key changes?
+The previous verification is invalidated, and the session must be re-verified before communication can continue. This protects against identity substitution.
 
-If a peer’s identity key changes:
-
-- Previous verification is invalidated.
-- The session must be re-verified.
-
-This protects against identity substitution attacks.
-
----
+## Does Quadrama have Forward Secrecy?
+Yes. Quadrama uses the Double Ratchet algorithm, which ensures that past messages cannot be decrypted if long-term keys are compromised later.
 
 ## Does Quadrama protect against malware?
-
-No.
-
+No.  
 Quadrama does not protect against:
-
-- Malware on your device
+- Malware or spyware on your device
 - Keyloggers
 - Compromised operating systems
-- Browser-level code injection
+- Physical access to an unlocked device
 
-Security depends on a trusted client environment.
-
----
+Security depends on a trusted device environment.
 
 ## Is Quadrama anonymous?
+Quadrama focuses on encryption. It does not guarantee anonymity against a global network observer, but includes features to make traffic analysis more difficult.
 
-Quadrama focuses on encryption and session security.
-
-It does not provide anonymity against a global network observer or metadata analysis.
-
----
-
-## Why are technical details not fully documented?
-
-Quadrama publicly documents high-level protocol design.
-
-Certain implementation details are intentionally not disclosed to reduce attack surface and prevent misuse.
-
----
+## Why are some technical details not fully documented?
+The core cryptographic mechanisms are documented. Certain implementation details are intentionally kept internal to maintain security boundaries.
 
 ## Is Quadrama audited?
+Quadrama is built on established cryptographic principles. Independent audits are planned for the future.
 
-Quadrama is designed with strong security principles.
-
-Formal audits may be conducted in the future.
+## How can I report a security issue?
+Please report security concerns to:  
+**Quadrama.sec@outlook.com**
