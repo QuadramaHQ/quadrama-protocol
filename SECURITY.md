@@ -10,7 +10,7 @@ If you discover a potential vulnerability, please report it responsibly.
 
 Please report security issues **privately**:
 
-📧 **security@quadrama.ch**
+📧 **quadrama.sec@outlook.com**
 
 Do **not** disclose vulnerabilities publicly before a fix is available.
 
