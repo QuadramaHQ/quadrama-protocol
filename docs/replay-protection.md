@@ -2,8 +2,7 @@
 
 Quadrama includes mechanisms to prevent replay and message duplication attacks.
 
-This document describes the conceptual approach only.
-Exact implementation parameters are not publicly disclosed.
+This document describes the conceptual approach only. Exact implementation parameters are not publicly disclosed.
 
 ---
 
@@ -11,10 +10,10 @@ Exact implementation parameters are not publicly disclosed.
 
 An attacker may attempt to:
 
-- Replay previously captured ciphertext
-- Re-inject old valid messages
-- Deliver duplicated packets
-- Manipulate message ordering
+- Replay previously captured ciphertext  
+- Re-inject old valid messages  
+- Deliver duplicated packets  
+- Manipulate message ordering  
 
 Replay protection ensures that previously processed messages cannot be accepted again.
 
@@ -24,12 +23,12 @@ Replay protection ensures that previously processed messages cannot be accepted 
 
 Quadrama implements replay defense using:
 
-- Per-session message counters
-- Authentication validation
-- A cache of recently processed message identifiers
-- Strict session binding
+- **Per-session message counters**  
+- **Cryptographic authentication**  
+- **A cache of recently processed message identifiers**  
+- **Strict session binding**  
 
-Messages that fail validation are rejected before decryption state changes.
+Messages that fail validation are rejected before any decryption state is changed.
 
 ---
 
@@ -47,9 +46,9 @@ Invalid or excessively delayed packets are rejected.
 
 All protected messages are bound to:
 
-- The active session context
-- The current handshake state
-- The established identity binding (if verified)
+- The active session context  
+- The current handshake state  
+- The established identity binding (if verified)  
 
 Messages that do not match the current session context are rejected.
 
@@ -59,9 +58,9 @@ Messages that do not match the current session context are rejected.
 
 Once peers are verified:
 
-- Session context validation becomes mandatory
-- Downgrade attempts are rejected
-- Relaxed compatibility paths are disabled
+- Session context validation becomes mandatory  
+- Protocol downgrade attempts are rejected  
+- Relaxed compatibility paths are disabled  
 
 This prevents replay through protocol fallback.
 
@@ -71,13 +70,12 @@ This prevents replay through protocol fallback.
 
 Replay protection is enforced at multiple layers:
 
-- Cryptographic authentication
-- Session context binding
-- Internal state validation
+- Cryptographic authentication  
+- Session context binding  
+- Internal state validation  
 
 Quadrama rejects malformed or unexpected messages by default.
 
 ---
 
-This document describes high-level protection concepts only.
-Implementation details may vary between clients.
+*This document describes high-level protection concepts only. Implementation details may vary between clients.*
