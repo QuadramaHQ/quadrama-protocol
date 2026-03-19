@@ -1,0 +1,13 @@
+{
+  "name": "mini-messenger-v3",
+  "version": "1.0.0",
+  "description": "Quadrama 1:1 E2EE Messenger",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3",
+    "ws": "^8.19.0"
+  }
+}

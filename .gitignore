@@ -1,0 +1,6 @@
+node_modules/
+server.log
+all_files.txt
+public/app.js.bak
+public/app.js.bak2
+public/index.html.bak

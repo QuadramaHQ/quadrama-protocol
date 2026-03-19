@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Quadrama · sicherer Messenger</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* === Modernes, professionelles Design === */
+    :root {
+      --bg-dark: #0b0f14;
+      --bg-card: #0f1622;
+      --bg-card-hover: #1a2535;
+      --border: #2a3a52;
+      --text-light: #e6edf3;
+      --text-muted: #9aa8b9;
+      --accent: #2ea043;
+      --accent-glow: rgba(46, 160, 67, 0.2);
+      --danger: #f85149;
+      --warning: #f0883e;
+      --bubble-me: #1c2c42;
+      --bubble-peer: #101a28;
+      --shadow: 0 20px 40px rgba(0,0,0,0.5);
+      --radius: 18px;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      padding: 24px 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      max-width: 1400px;
+      width: 100%;
+    }
+
+    /* === Kopf === */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #a6c1ff, #5f9ea0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .badge {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 18px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+    .badge i {
+      color: var(--accent);
+    }
+
+    /* === GitHub-Link === */
+    .github-link {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      transition: 0.2s;
+    }
+    .github-link:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: #4c6a8f;
+    }
+    .github-link i {
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    /* === Sprachumschalter === */
+    .lang-switch {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .lang-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: black;
+    }
+    .lang-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.05);
+      border-color: #4c6a8f;
+      color: white;
+    }
+
+    /* === Hauptlayout: 2 Spalten === */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 0.9fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    /* === Karten === */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(4px);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: #3e5a7a;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+    .card-header i {
+      margin-right: 8px;
+      color: var(--accent);
+    }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* === Chat-Bereich === */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 250px);
+      min-height: 450px;
+    }
+    .chat-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .room-indicator {
+      background: rgba(255,255,255,0.03);
+      border-radius: 30px;
+      padding: 6px 16px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .room-indicator i {
+      color: var(--accent);
+    }
+    .chat-box {
+      flex: 1;
+      background: #0a0e14;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bubbleRow {
+      display: flex;
+    }
+    .bubbleRow.me {
+      justify-content: flex-end;
+    }
+    .bubbleWrap {
+      max-width: 75%;
+    }
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: var(--bubble-peer);
+      word-break: break-word;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .bubbleRow.me .bubble {
+      background: var(--bubble-me);
+      border-bottom-right-radius: 6px;
+    }
+    .bubbleRow.peer .bubble {
+      border-bottom-left-radius: 6px;
+    }
+    .bubbleTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .bubbleName {
+      font-weight: 600;
+      color: #b4c9e9;
+    }
+    .composer {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      align-items: flex-end;
+    }
+    .composer textarea {
+      flex: 1;
+      background: #0f1622;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 14px 18px;
+      color: white;
+      font-size: 15px;
+      resize: vertical;
+      min-height: 55px;
+      max-height: 140px;
+      transition: border 0.2s;
+    }
+    .composer textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .btn-send {
+      background: var(--accent);
+      border: none;
+      border-radius: 40px;
+      padding: 0 30px;
+      height: 55px;
+      min-width: 55px;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 8px 20px rgba(46, 160, 67, 0.3);
+    }
+    .btn-send:hover:not(:disabled) {
+      background: #2fb344;
+      transform: scale(1.02);
+    }
+    .btn-send:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* === Status & Steuerung === */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px 24px;
+      margin: 20px 0;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .status-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .status-value {
+      font-weight: 600;
+    }
+    .status-value.ok { color: var(--accent); }
+    .status-value.bad { color: var(--danger); }
+
+    /* === Sicherheits-Checkliste === */
+    .checklist {
+      background: rgba(0,0,0,0.2);
+      border-radius: 30px;
+      padding: 18px;
+      margin: 20px 0;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .checklist-item:last-child {
+      border-bottom: none;
+    }
+    .checklist-item .step {
+      width: 28px;
+      height: 28px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .checklist-item.done .step {
+      background: var(--accent);
+      color: black;
+    }
+    .checklist-item .text {
+      flex: 1;
+      font-weight: 500;
+    }
+    .step-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .step-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* === Safety-Code-Box === */
+    .safety-box {
+      background: #0e1a28;
+      border: 2px solid var(--accent);
+      border-radius: 30px;
+      padding: 20px;
+      text-align: center;
+      margin: 20px 0;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .safety-box .code {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      word-break: break-word;
+      font-family: monospace;
+      background: rgba(0,0,0,0.3);
+      padding: 12px;
+      border-radius: 20px;
+    }
+
+    /* === Buttons === */
+    .btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 10px 20px;
+      color: white;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 14px;
+      min-height: 44px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: black;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #2fb344;
+      box-shadow: 0 8px 16px rgba(46, 160, 67, 0.3);
+    }
+    .btn-outline:hover:not(:disabled) {
+      background: rgba(255,255,255,0.05);
+      border-color: #4c6a8f;
+    }
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(248, 81, 73, 0.1);
+    }
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* === Log-Bereich === */
+    .log-card {
+      margin-top: 24px;
+    }
+    .log-box {
+      background: #0a0e14;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      height: calc(100vh - 450px);
+      min-height: 100px;
+      max-height: 250px;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: #b4c9e9;
+    }
+
+    /* === Kontakte === */
+    .contact-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px 20px;
+      margin: 16px 0;
+    }
+    .contact-label {
+      color: var(--text-muted);
+    }
+    .history pre {
+      background: #0a0e14;
+      padding: 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      max-height: 120px;
+      min-height: 60px;
+      height: auto;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid var(--border);
+    }
+
+    /* === Footer === */
+    .footer {
+      margin-top: 40px;
+      padding: 20px 0 10px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer a:hover {
+      color: var(--accent);
+    }
+
+    /* === MOBILE OPTIMIERUNGEN === */
+    @media (max-width: 600px) {
+      body { padding: 12px 10px; }
+      .header { margin-bottom: 16px; gap: 10px; }
+      .logo h1 { font-size: 22px; }
+      .header .badge { display: none; }
+      .card { padding: 14px; border-radius: 14px; }
+      .chat-container { height: calc(100vh - 200px); min-height: 300px; }
+      .chat-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+      .chat-toolbar > div { flex-wrap: wrap; gap: 6px; }
+      .chat-toolbar .badge { padding: 4px 10px; font-size: 12px; }
+      .btn span { display: none; }
+      .btn i { margin: 0; }
+      .btn { padding: 10px 14px; min-height: 44px; min-width: 44px; justify-content: center; }
+      .composer { flex-direction: column; gap: 8px; }
+      .composer textarea { border-radius: 18px; min-height: 50px; font-size: 16px; }
+      .btn-send { width: 100%; border-radius: 18px; height: 50px; font-size: 15px; }
+      .status-grid { grid-template-columns: 1fr; gap: 12px; }
+      .safety-box .code { font-size: 15px; letter-spacing: 0.5px; }
+      .safety-box { padding: 14px; }
+      .checklist { padding: 12px; border-radius: 18px; }
+      .checklist-item { padding: 8px 0; gap: 10px; }
+      .contact-row { grid-template-columns: 90px 1fr; gap: 8px 12px; }
+      .log-box { max-height: 150px; font-size: 11px; }
+      .footer { gap: 20px; font-size: 13px; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      body { padding: 16px 14px; }
+      .chat-container { height: calc(100vh - 220px); min-height: 350px; }
+      .safety-box .code { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Kopf -->
+  <div class="header">
+    <div class="logo">
+      <h1>QUADRAMA</h1>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <!-- Sprachumschalter -->
+      <div class="lang-switch">
+        <button class="lang-btn active" id="langDe" id="langDe">🇩🇪 DE</button>
+        <button class="lang-btn" id="langEn" id="langEn">🇬🇧 EN</button>
+      </div>
+      <a href="https://github.com/QuadramaHQ/quadrama-protocol" target="_blank" class="github-link">
+        <i class="fab fa-github"></i> GitHub
+      </a>
+      <div class="badge">
+        <i class="fas fa-shield-alt"></i> <span data-i18n="e2ee">Ende‑zu‑Ende verschlüsselt</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hauptgrid -->
+  <div class="main-grid">
+    <!-- Linke Spalte: Chat -->
+    <div class="card">
+      <div class="card-header">
+        <span><i class="fas fa-comment-dots"></i> <span data-i18n="chat">Chat</span></span>
+        <span class="room-indicator"><i class="fas fa-door-open"></i> <span data-i18n="room">Raum</span>: <span id="roomStatus">—</span></span>
+      </div>
+      <div class="chat-container">
+        <div class="chat-toolbar">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <span class="badge" style="padding: 4px 12px;"><i class="fas fa-lock"></i> Trust: <span id="trustStatus" class="status-value" data-i18n-id="trustNotConfirmed">nicht bestätigt</span></span>
+            <span class="badge" style="padding: 4px 12px;"><i class="fas fa-key"></i> KC: <span id="kcMini">—</span></span>
+            <span class="badge" style="padding: 4px 12px;"><i class="fas fa-chart-line"></i> <span id="statsStatus">—</span></span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button id="btnVerify" class="btn btn-outline" disabled><i class="fas fa-check-circle"></i><span data-i18n="verify">Verifizieren</span></button>
+            <button id="btnUnverify" class="btn btn-outline" disabled><i class="fas fa-times-circle"></i><span data-i18n="delete">Löschen</span></button>
+            <button id="btnShowSafety" class="btn btn-outline" disabled><i class="fas fa-shield"></i><span data-i18n="showSafety">Safety zeigen</span></button>
+          </div>
+        </div>
+        <div id="chatBox" class="chat-box"></div>
+        <div class="composer">
+          <textarea id="message" data-i18n-placeholder="msgPlaceholder" placeholder="Nachricht schreiben … (Enter = senden)"></textarea>
+          <button id="btnSend" class="btn-send" disabled><i class="fas fa-paper-plane"></i> <span data-i18n="send">Senden</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rechte Spalte: Steuerung & Status -->
+    <div class="card">
+      <div class="card-header">
+        <span><i class="fas fa-sliders-h"></i> <span data-i18n="controlStatus">Steuerung & Status</span></span>
+      </div>
+
+      <!-- Checkliste -->
+      <div class="checklist" id="stepChecklist">
+        <div class="checklist-item" id="step0">
+          <div class="step">0</div>
+          <div class="text">
+            <div class="step-title" data-i18n="step0">Factory Reset (optional)</div>
+            <div class="step-desc" data-i18n="step0desc"></div>
+          </div>
+        </div>
+        <div class="checklist-item" id="step1">
+          <div class="step">1</div>
+          <div class="text">
+            <div class="step-title" data-i18n="step1">Identity laden/erz.</div>
+            <div class="step-desc" data-i18n="step1desc"></div>
+          </div>
+        </div>
+        <div class="checklist-item" id="step2">
+          <div class="step">2</div>
+          <div class="text">
+            <div class="step-title" data-i18n="step2">Connect</div>
+            <div class="step-desc" data-i18n="step2desc"></div>
+          </div>
+        </div>
+        <div class="checklist-item" id="step3">
+          <div class="step">3</div>
+          <div class="text">
+            <div class="step-title" data-i18n="step3">Raum joinen</div>
+            <div class="step-desc" data-i18n="step3desc"></div>
+          </div>
+        </div>
+        <div class="checklist-item" id="step4">
+          <div class="step">4</div>
+          <div class="text">
+            <div class="step-title" data-i18n="step4">Zweiter Client verbunden</div>
+            <div class="step-desc" data-i18n="step4desc"></div>
+          </div>
+        </div>
+        <div class="checklist-item" id="step5">
+          <div class="step">5</div>
+          <div class="text">
+            <div class="step-title" data-i18n="step5">Safety vergleichen + verifizieren</div>
+            <div class="step-desc" data-i18n="step5desc"></div>
+          </div>
+        </div>
+        <div class="checklist-item" id="step6">
+          <div class="step">6</div>
+          <div class="text">
+            <div class="step-title" data-i18n="step6">✅ Chatten</div>
+            <div class="step-desc" data-i18n="step6desc"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status-Icons -->
+      <div class="status-grid">
+        <div class="status-item"><span class="status-icon"><i class="fas fa-globe"></i></span><div><div class="status-label">HTTP</div><div id="httpStatus" class="status-value ok">ok</div></div></div>
+        <div class="status-item"><span class="status-icon"><i class="fas fa-wifi"></i></span><div><div class="status-label">WebSocket</div><div id="wsStatus" class="status-value bad" data-i18n-id="disconnected">getrennt</div></div></div>
+        <div class="status-item"><span class="status-icon"><i class="fas fa-cube"></i></span><div><div class="status-label">NaCl</div><div id="cryptoStatus" class="status-value" data-i18n-id="ready">bereit</div></div></div>
+        <div class="status-item"><span class="status-icon"><i class="fas fa-fingerprint"></i></span><div><div class="status-label" data-i18n="myFp">Mein FP</div><div id="fpStatus" class="status-value">—</div></div></div>
+        <div class="status-item"><span class="status-icon"><i class="fas fa-user-friends"></i></span><div><div class="status-label" data-i18n="peerFp">Peer FP</div><div id="peerFpStatus" class="status-value">—</div></div></div>
+        <div class="status-item"><span class="status-icon"><i class="fas fa-shield-alt"></i></span><div><div class="status-label">Safety</div><div id="safetyStatus" class="status-value">—</div></div></div>
+      </div>
+
+      <!-- Safety-Code -->
+      <div class="safety-box">
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;"><i class="fas fa-lock"></i> <span data-i18n="securityCode">Sicherheitscode</span></div>
+        <div id="safetyCodeDisplay" class="code" style="font-size: 20px;">—</div>
+      </div>
+
+      <!-- Verbindungssteuerung -->
+      <div style="display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap;">
+        <input id="wsUrl" type="text" class="btn" style="flex:2; background: #0f1622; min-width: 120px;" value="wss://quadrama.ch/ws">
+        <button id="btnConnect" class="btn btn-primary"><i class="fas fa-plug"></i> <span data-i18n="connect">Connect</span></button>
+        <button id="btnDisconnect" class="btn btn-outline" disabled><i class="fas fa-power-off"></i> <span data-i18n="disconnect">Disconnect</span></button>
+      </div>
+
+      <!-- Raumsteuerung -->
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <input id="roomCode" type="text" class="btn" style="flex:1; background: #0f1622; min-width: 80px;" data-i18n-placeholder="roomCode" placeholder="Raumcode">
+        <button id="btnJoin" class="btn btn-outline" disabled><i class="fas fa-sign-in-alt"></i> <span data-i18n="join">Join</span></button>
+        <button id="btnNewRoom" class="btn btn-outline" disabled><i class="fas fa-plus-circle"></i> <span data-i18n="new">Neu</span></button>
+        <button id="btnLeave" class="btn btn-outline" disabled><i class="fas fa-sign-out-alt"></i> <span data-i18n="leave">Leave</span></button>
+      </div>
+
+      <!-- Identity & Reset -->
+      <div class="divider"></div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button id="btnGenerateKeys" class="btn btn-outline"><i class="fas fa-key"></i> <span data-i18n="identity">Identity laden/erz.</span></button>
+        <button id="btnBackup" class="btn btn-outline" disabled><i class="fas fa-download"></i> <span data-i18n="backup">Backup (deaktiviert)</span></button>
+        <button id="btnRestore" class="btn btn-outline" disabled><i class="fas fa-upload"></i> <span data-i18n="restore">Restore (deaktiviert)</span></button>
+        <button id="btnResetAll" class="btn btn-danger"><i class="fas fa-trash-alt"></i> <span data-i18n="factoryReset">Factory Reset</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log-Bereich -->
+  <div class="card log-card">
+    <div class="card-header">
+      <span><i class="fas fa-terminal"></i> <span data-i18n="debugLog">Debug-Log</span></span>
+    </div>
+    <pre id="log" class="log-box"></pre>
+  </div>
+
+  <!-- Kontakte (Primary) -->
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+      <span><i class="fas fa-address-book"></i> <span data-i18n="contacts">Kontakte (Primary)</span></span>
+    </div>
+    <div class="contact-row">
+      <div class="contact-label" data-i18n="peerFp">Peer FP</div><div id="primaryFp" class="status-value">—</div>
+      <div class="contact-label" data-i18n="status">Status</div><div id="primaryStatus" class="status-value">—</div>
+      <div class="contact-label" data-i18n="firstSeen">First seen</div><div id="primaryFirstSeen">—</div>
+      <div class="contact-label" data-i18n="lastSeen">Last seen</div><div id="primaryLastSeen">—</div>
+      <div class="contact-label" data-i18n="verifiedAt">Verified at</div><div id="primaryVerifiedAt">—</div>
+    </div>
+    <div class="divider"></div>
+    <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 10px;"><i class="fas fa-history"></i> <span data-i18n="keyHistory">Key-History</span></div>
+    <pre id="historyList" class="history">—</pre>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="impressum.html" data-i18n="imprint">Impressum</a>
+    <a href="datenschutz.html" data-i18n="privacy">Datenschutz</a>
+  </div>
+</div>
+
+<script src="./tweetnacl.min.js" integrity="sha256-PsU1wASu6yJXhdjpP7M7+Z9S45m9ffwBlptWKbrqUTE=" crossorigin="anonymous"></script>
+<script src="./i18n.js" integrity="sha256-qj3ga5GuGgFZFmGqb5WO5/HFDmMBhhNU2yXSaHFHFZY=" crossorigin="anonymous"></script>
+<script src="./app.js"></script>
+</body>
+</html>
