@@ -1,0 +1,35 @@
+node_modules/
+
+# Environment files — never commit secrets
+.env
+.env.*
+
+# Local backups / scratch
+*.bak
+*.bak*
+*.backup
+*.zip
+all_files.txt
+
+# Logs
+*.log
+server.log
+
+# Crypto material — should never enter the repo
+*.pem
+*.key
+
+# Local databases
+*.sqlite
+*.db
+
+# OS / IDE noise
+.DS_Store
+.idea/
+.vscode/
+
+# Test / coverage / browser-CI artefacts
+coverage/
+screenshots/
+playwright-report/
+test-results/

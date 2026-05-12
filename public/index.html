@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Quadrama · Privater 1:1 Messenger</title>
+  <!--
+    Defence-in-depth CSP. The reverse proxy is the source of truth in
+    production, but this meta tag keeps the app safe in self-hosted /
+    local-only deployments. 'unsafe-inline' is required for the inline
+    <style> block below; no remote origins are permitted. Note:
+    `frame-ancestors`, `report-uri` and `sandbox` are intentionally
+    omitted here — browsers ignore them when delivered via <meta>; the
+    HTTP-header CSP from the relay/proxy is the authoritative source.
+  -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws: wss:; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer"/>
+  <!-- Inline empty favicon so browsers don't auto-fetch /favicon.ico (was 404). -->
+  <link rel="icon" href="data:,"/>
+  <style>
+    /* ============================================================
+       Quadrama — "Secure Vault Dark" design system, v2026-05-11
+       Tokens: spacing scale, type scale, color tokens, radii, shadow.
+       Everything below references these tokens — no magic numbers.
+       ============================================================ */
+    :root {
+      /* Color tokens */
+      --bg-base: #0a0d11;
+      --bg-elevated: #11151b;
+      --bg-elevated-hover: #161b22;
+      --bg-input: #0d1117;
+      --bg-bubble-peer: #141a23;
+      --bg-bubble-me: #1c2a1c;
+
+      --text-primary: #e8edf2;
+      --text-secondary: #c6ced6;
+      --text-muted: #8b95a1;
+      --text-faint: #5e6873;
+
+      --accent: #3fb950;          /* primary emerald */
+      --accent-strong: #46c155;
+      --accent-soft: rgba(63, 185, 80, 0.12);
+      --accent-ring: rgba(63, 185, 80, 0.35);
+
+      --danger: #f85149;
+      --danger-soft: rgba(248, 81, 73, 0.10);
+
+      --border: #1d232b;
+      --border-strong: #283038;
+      --border-input: #2a323c;
+
+      --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 28px rgba(0,0,0,0.35);
+      --shadow-elevated: 0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 50px rgba(0,0,0,0.50);
+
+      /* Spacing scale (8-px rhythm) */
+      --s-1: 4px;
+      --s-2: 8px;
+      --s-3: 12px;
+      --s-4: 16px;
+      --s-5: 20px;
+      --s-6: 24px;
+      --s-7: 32px;
+      --s-8: 40px;
+      --s-9: 56px;
+
+      /* Radii */
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-pill: 999px;
+
+      /* Type scale */
+      --fs-12: 12px;
+      --fs-13: 13px;
+      --fs-14: 14px;
+      --fs-15: 15px;
+      --fs-16: 16px;
+      --fs-17: 17px;
+      --fs-20: 20px;
+      --fs-24: 24px;
+      --fs-30: 30px;
+    }
+
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-size: var(--fs-15);
+      line-height: 1.55;
+      min-height: 100vh;
+      padding: var(--s-6) var(--s-4);
+      display: flex;
+      justify-content: center;
+      font-feature-settings: "ss01", "cv01";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { max-width: 1100px; width: 100%; }
+
+    /* Inline icon glyphs use currentColor + stroke. */
+    .icon {
+      width: 1em; height: 1em;
+      vertical-align: -0.125em;
+      fill: none; stroke: currentColor;
+      stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       Hero band: brand mark + lang switcher + GitHub + tagline + trust badges.
+       This is the new top frame; replaces the small badge-on-the-right header.
+       ============================================================ */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-5);
+      padding: var(--s-7) var(--s-5) var(--s-6) var(--s-5);
+      margin-bottom: var(--s-6);
+      background: linear-gradient(180deg, rgba(63,185,80,0.04) 0%, rgba(63,185,80,0) 80%);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card);
+    }
+    .hero-top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--s-4); flex-wrap: wrap;
+    }
+    .brand {
+      display: inline-flex; align-items: center; gap: var(--s-3);
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .brand-mark {
+      width: 32px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: var(--r-sm);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .brand-mark .icon { width: 18px; height: 18px; stroke-width: 2; }
+    .brand-name {
+      font-size: var(--fs-20);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+    .brand-subtle {
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      margin-left: 2px;
+    }
+
+    .header-actions { display: inline-flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+    .lang-switch {
+      display: inline-flex; align-items: center;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-pill);
+      padding: 2px;
+      background: rgba(0,0,0,0.18);
+    }
+    .lang-btn {
+      background: transparent; border: 0;
+      border-radius: var(--r-pill);
+      color: var(--text-muted);
+      font-size: var(--fs-12); font-weight: 600;
+      padding: 6px 10px; cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    .lang-btn.active { background: var(--bg-elevated); color: var(--text-primary); }
+
+    .github-link {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      color: var(--text-secondary); text-decoration: none;
+      font-size: var(--fs-13); font-weight: 500;
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-pill);
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .github-link .icon { width: 16px; height: 16px; }
+    .github-link:hover { color: var(--text-primary); border-color: var(--text-muted); background: rgba(255,255,255,0.03); }
+
+    .hero-claim {
+      font-size: clamp(var(--fs-20), 2.4vw, var(--fs-30));
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+      color: var(--text-primary);
+      max-width: 720px;
+    }
+    .hero-sub {
+      font-size: var(--fs-15);
+      line-height: 1.55;
+      color: var(--text-secondary);
+      max-width: 640px;
+    }
+
+    .trust-row {
+      display: flex; flex-wrap: wrap; gap: var(--s-2);
+      margin-top: var(--s-2);
+    }
+    .trust-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,0.02);
+      color: var(--text-secondary);
+      font-size: var(--fs-12);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .trust-pill .icon { width: 13px; height: 13px; color: var(--accent); }
+
+    /* ============================================================
+       Two-column grid (chat / control). Single column under 1024 px.
+       ============================================================ */
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+      gap: var(--s-5);
+      margin-bottom: var(--s-6);
+    }
+    @media (max-width: 1023px) {
+      .main-grid { grid-template-columns: 1fr; gap: var(--s-4); }
+    }
+
+    /* Card surface. Calm, raised, no thick border. */
+    .card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: var(--s-6);
+      box-shadow: var(--shadow-card);
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--s-5);
+      gap: var(--s-3);
+      font-size: var(--fs-13);
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .card-header .icon { color: var(--accent); width: 16px; height: 16px; }
+    .card-header > span { display: inline-flex; align-items: center; gap: var(--s-2); }
+    .divider { height: 1px; background: var(--border); margin: var(--s-5) 0; }
+
+    /* ============================================================
+       Status meta strip (single line, replaces status grid).
+       ============================================================ */
+    .meta-strip {
+      display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4);
+      align-items: center;
+      padding: var(--s-3) var(--s-4);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: var(--bg-base);
+      font-size: var(--fs-13);
+      color: var(--text-muted);
+      margin-bottom: var(--s-5);
+    }
+    .meta-strip .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 0 3px rgba(248,81,73,0.18);
+      flex-shrink: 0;
+    }
+    .meta-strip.online .dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .meta-strip strong {
+      color: var(--text-primary); font-weight: 600;
+    }
+    .meta-strip .sep { color: var(--text-faint); }
+    .meta-fp {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: var(--fs-12);
+      color: var(--text-secondary);
+    }
+
+    /* ============================================================
+       Chat surface.
+       ============================================================ */
+    .chat-container { display: flex; flex-direction: column; height: clamp(420px, calc(100vh - 280px), 720px); }
+    .chat-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4);
+    }
+    .room-indicator {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      padding: 6px 12px;
+      border: 1px solid var(--border-strong); border-radius: var(--r-pill);
+      background: rgba(255,255,255,0.02);
+      font-size: var(--fs-13); color: var(--text-secondary);
+    }
+    .room-indicator .icon { color: var(--accent); width: 14px; height: 14px; }
+    .room-indicator strong { color: var(--text-primary); font-weight: 600; }
+
+    .chat-meta-pills { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      font-size: var(--fs-12); color: var(--text-muted);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,0.02);
+    }
+    .pill .icon { width: 12px; height: 12px; color: var(--text-muted); }
+    .pill-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+
+    .chat-box {
+      flex: 1;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-5);
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+      gap: var(--s-3);
+    }
+    .chat-box:has(.bubbleRow) .chat-empty { display: none; }
+    .chat-empty {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      font-size: var(--fs-14);
+      padding: var(--s-6) var(--s-4);
+      text-align: center;
+      line-height: 1.55;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .bubbleRow { display: flex; }
+    .bubbleRow.me { justify-content: flex-end; }
+    .bubbleWrap { max-width: 78%; }
+    .bubble {
+      padding: var(--s-3) var(--s-4);
+      border-radius: var(--r-lg);
+      background: var(--bg-bubble-peer);
+      color: var(--text-primary);
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    .bubbleRow.me .bubble {
+      background: var(--bg-bubble-me);
+      border: 1px solid rgba(63,185,80,0.18);
+      border-bottom-right-radius: var(--r-sm);
+    }
+    .bubbleRow.peer .bubble { border-bottom-left-radius: var(--r-sm); }
+    .bubbleTop {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--s-1);
+      font-size: var(--fs-12); color: var(--text-muted);
+    }
+    .bubbleName { font-weight: 600; color: var(--text-secondary); }
+
+    .composer {
+      display: flex; gap: var(--s-3); margin-top: var(--s-4); align-items: flex-end;
+    }
+    .composer textarea {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-input);
+      border-radius: var(--r-md);
+      padding: var(--s-3) var(--s-4);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: var(--fs-15);
+      resize: vertical;
+      min-height: 48px; max-height: 140px;
+      line-height: 1.55;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .composer textarea::placeholder { color: var(--text-faint); }
+    .composer textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    /* ============================================================
+       Buttons.
+       ============================================================ */
+    .btn, .btn-send {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: var(--s-2);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: var(--fs-14);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      min-height: 40px;
+      padding: 0 var(--s-4);
+      border-radius: var(--r-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+    .btn .icon, .btn-send .icon { width: 16px; height: 16px; }
+
+    /* Secondary (default). Subtle outline. */
+    .btn, .btn-outline {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+    .btn:hover:not(:disabled), .btn-outline:hover:not(:disabled) {
+      background: var(--bg-elevated-hover);
+      border-color: var(--text-muted);
+    }
+
+    /* Primary CTA. Bold emerald. */
+    .btn-primary {
+      background: var(--accent);
+      color: #06140a;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.05) inset, 0 1px 0 rgba(255,255,255,0.18) inset;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-strong);
+      border-color: var(--accent-strong);
+    }
+    .btn-primary:disabled {
+      background: var(--accent-soft);
+      border-color: transparent;
+      color: var(--accent);
+      cursor: not-allowed;
+      opacity: 0.55;
+      box-shadow: none;
+    }
+
+    /* Danger (Factory reset). Calm red border, low surface. */
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border-color: rgba(248,81,73,0.45);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger-soft);
+      border-color: var(--danger);
+    }
+
+    /* Disabled (non-primary). Muted without dropping to 30 % opacity. */
+    .btn:disabled, .btn-outline:disabled {
+      cursor: not-allowed;
+      background: transparent;
+      color: var(--text-faint);
+      border-color: var(--border);
+    }
+
+    /* Send button (composer). Slight visual weight. */
+    .btn-send {
+      background: var(--accent);
+      color: #06140a;
+      border-color: var(--accent);
+      min-height: 48px;
+      padding: 0 var(--s-5);
+      box-shadow: 0 6px 14px rgba(63,185,80,0.22);
+    }
+    .btn-send:hover:not(:disabled) { background: var(--accent-strong); }
+    .btn-send:disabled {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: transparent;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    /* Visible keyboard focus for everyone who tabs. */
+    .btn:focus-visible,
+    .btn-send:focus-visible,
+    .lang-btn:focus-visible,
+    .github-link:focus-visible,
+    .brand:focus-visible,
+    .footer a:focus-visible,
+    summary.advanced-summary:focus-visible,
+    .input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .composer textarea:focus-visible { outline: none; }
+
+    /* ============================================================
+       Inputs.
+       ============================================================ */
+    .input {
+      display: block;
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-input);
+      border-radius: var(--r-sm);
+      padding: 0 var(--s-4);
+      min-height: 40px;
+      color: var(--text-primary);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: var(--fs-14);
+      letter-spacing: 0.04em;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input::placeholder { color: var(--text-faint); letter-spacing: normal; font-family: inherit; }
+    .input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .field-row {
+      display: flex; gap: var(--s-2); flex-wrap: wrap;
+      margin-bottom: var(--s-3);
+    }
+    .field-row .input { flex: 1; min-width: 0; }
+    .field-row .btn { flex-shrink: 0; }
+
+    /* ============================================================
+       "So funktioniert es" — slim step rail (replaces big numbered cards).
+       ============================================================ */
+    .steps {
+      list-style: none;
+      counter-reset: step;
+      display: grid; grid-template-columns: 1fr; gap: var(--s-3);
+      margin: 0 0 var(--s-5) 0;
+    }
+    .checklist-item {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: var(--s-3);
+      align-items: start;
+      padding: 0;
+    }
+    .checklist-item .step {
+      width: 24px; height: 24px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: var(--fs-12); font-weight: 700;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-pill);
+    }
+    .checklist-item.done .step { background: var(--accent); color: #06140a; border-color: var(--accent); }
+    .step-title { font-weight: 600; font-size: var(--fs-14); color: var(--text-primary); }
+    .step-desc { font-size: var(--fs-13); color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+
+    /* ============================================================
+       Safety code — quiet container, only emphatic when ready.
+       ============================================================ */
+    .safety-box {
+      margin: var(--s-5) 0;
+      padding: var(--s-5);
+      background: var(--bg-base);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-md);
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .safety-box.ready {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, var(--accent-soft) 0%, var(--bg-base) 100%);
+    }
+    .safety-label {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      font-size: var(--fs-12);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--s-3);
+    }
+    .safety-label .icon { color: var(--accent); width: 14px; height: 14px; }
+    .safety-box .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: var(--fs-17);
+      line-height: 1.55;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+      word-break: break-word;
+    }
+    .safety-box .code.empty { color: var(--text-faint); font-size: var(--fs-13); font-family: inherit; letter-spacing: normal; }
+    .safety-hint {
+      margin-top: var(--s-3);
+      font-size: var(--fs-13);
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* ============================================================
+       Advanced section.
+       ============================================================ */
+    details.advanced {
+      margin-top: var(--s-6);
+      border-top: 1px solid var(--border);
+      padding-top: var(--s-5);
+    }
+    summary.advanced-summary {
+      cursor: pointer; list-style: none;
+      color: var(--text-muted);
+      font-size: var(--fs-13);
+      letter-spacing: 0.04em;
+      padding: 6px 10px;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      border-radius: var(--r-sm);
+      user-select: none;
+    }
+    summary.advanced-summary::-webkit-details-marker { display: none; }
+    summary.advanced-summary::before {
+      content: "▸";
+      font-size: 12px;
+      transition: transform 0.15s ease;
+    }
+    details[open] > summary.advanced-summary::before { transform: rotate(90deg); }
+    summary.advanced-summary:hover { color: var(--text-primary); background: rgba(255,255,255,0.02); }
+
+    .log-card { margin-top: var(--s-4); }
+    .log-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-4);
+      height: 220px;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: var(--fs-12);
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .contact-row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: var(--s-3) var(--s-5);
+      margin: var(--s-4) 0;
+      font-size: var(--fs-13);
+    }
+    .contact-label { color: var(--text-muted); }
+    .history pre {
+      background: var(--bg-base); border: 1px solid var(--border);
+      padding: var(--s-3); border-radius: var(--r-md);
+      font-size: var(--fs-12); color: var(--text-muted);
+      max-height: 140px;
+      overflow-y: auto; white-space: pre-wrap; word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    /* ============================================================
+       Footer.
+       ============================================================ */
+    .footer {
+      margin-top: var(--s-7);
+      padding: var(--s-5) 0 var(--s-3) 0;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: center; gap: var(--s-6);
+      font-size: var(--fs-13);
+      color: var(--text-muted);
+    }
+    .footer a { color: var(--text-muted); text-decoration: none; }
+    .footer a:hover { color: var(--text-primary); }
+    .footer-meta {
+      margin-top: var(--s-2);
+      text-align: center;
+      font-size: var(--fs-12);
+      color: var(--text-faint);
+    }
+    .footer-meta a {
+      color: var(--text-muted); text-decoration: none;
+      border-bottom: 1px dotted rgba(255,255,255,0.15);
+    }
+    .footer-meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ============================================================
+       Mobile / narrow viewports.
+       ============================================================ */
+    @media (max-width: 640px) {
+      body { padding: var(--s-4) var(--s-3); }
+      .hero { padding: var(--s-5) var(--s-4); border-radius: var(--r-md); }
+      .brand-subtle { display: none; }
+      .hero-claim { font-size: var(--fs-20); }
+      .hero-sub { font-size: var(--fs-14); }
+      .card { padding: var(--s-5); border-radius: var(--r-md); }
+      .chat-container { height: clamp(360px, calc(100vh - 220px), 560px); }
+      .chat-toolbar { flex-direction: column; align-items: stretch; }
+      .pill-actions, .chat-meta-pills { gap: 4px; }
+      .btn span { display: inline; }
+      .btn { padding: 0 var(--s-3); }
+      .composer { flex-direction: column; }
+      .composer textarea { font-size: var(--fs-16); }
+      .btn-send { width: 100%; padding: 0; }
+      .footer { gap: var(--s-4); flex-wrap: wrap; }
+      .contact-row { grid-template-columns: 100px 1fr; gap: var(--s-2) var(--s-3); }
+    }
+    @media (max-width: 380px) {
+      .brand-name { font-size: var(--fs-17); }
+      .hero-claim { font-size: var(--fs-17); }
+    }
+  </style>
+</head>
+<body>
+
+<!--
+  Local SVG icon sprite. The previous build pulled Font Awesome from
+  cdnjs.cloudflare.com — every page load leaked the visit to a third-party
+  CDN and the file was loaded without SRI. Removing that link is a hard
+  privacy requirement for Quadrama.
+-->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></symbol>
+    <symbol id="i-lock"   viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></symbol>
+    <symbol id="i-chat"   viewBox="0 0 24 24"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 5l-1 3.2A8 8 0 0 1 21 12z"/><circle cx="9" cy="12" r="0.6" fill="currentColor" stroke="none"/><circle cx="13" cy="12" r="0.6" fill="currentColor" stroke="none"/><circle cx="17" cy="12" r="0.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-door"   viewBox="0 0 24 24"><path d="M14 3L4 5v14l10 2V3z"/><path d="M14 8h6v13h-6"/><circle cx="12" cy="12" r="0.7" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-key"    viewBox="0 0 24 24"><circle cx="8" cy="14" r="3.5"/><path d="M10.5 12.5L21 2"/><path d="M16 7l3 3"/></symbol>
+    <symbol id="i-chart"  viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 17l4-5 4 3 6-9"/></symbol>
+    <symbol id="i-check"  viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+    <symbol id="i-x"      viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-plane"  viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></symbol>
+    <symbol id="i-sliders"viewBox="0 0 24 24"><path d="M4 7h11M19 7h1M4 12h6M14 12h6M4 17h13M21 17h-1"/><circle cx="17" cy="7" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="17" r="2"/></symbol>
+    <symbol id="i-globe"  viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"/></symbol>
+    <symbol id="i-wifi"   viewBox="0 0 24 24"><path d="M2 9a16 16 0 0 1 20 0"/><path d="M5 13a11 11 0 0 1 14 0"/><path d="M8.5 16.5a6 6 0 0 1 7 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-cube"   viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8l9-5z"/><path d="M3 8l9 5 9-5M12 13v10"/></symbol>
+    <symbol id="i-finger" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 1 12 0v3"/><path d="M9 12a3 3 0 0 1 6 0v4"/><path d="M12 12v6"/><path d="M5 18c1 2 3 3 6 3"/></symbol>
+    <symbol id="i-users"  viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M14 20c0-2 2-3.5 4-3.5s3 1 3 3"/></symbol>
+    <symbol id="i-plug"   viewBox="0 0 24 24"><path d="M9 2v6M15 2v6"/><path d="M7 8h10v4a5 5 0 0 1-10 0V8z"/><path d="M12 17v5"/></symbol>
+    <symbol id="i-power"  viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M7 6a8 8 0 1 0 10 0"/></symbol>
+    <symbol id="i-sign-in" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></symbol>
+    <symbol id="i-plus"   viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+    <symbol id="i-sign-out" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/><path d="M14 17l5-5-5-5"/><path d="M19 12H7"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/></symbol>
+    <symbol id="i-upload"   viewBox="0 0 24 24"><path d="M12 21V9"/><path d="M7 13l5-5 5 5"/><path d="M4 3h16"/></symbol>
+    <symbol id="i-trash"  viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M10 11v7M14 11v7"/></symbol>
+    <symbol id="i-term"   viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 10l3 2-3 2M12 16h5"/></symbol>
+    <symbol id="i-book"   viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4z"/><path d="M6 18h13"/><circle cx="12" cy="10" r="2"/><path d="M9 14h6"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M3 12a9 9 0 0 1 3-7"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.7-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.4.1-2.9 0 0 .8-.3 2.8 1a9.7 9.7 0 0 1 5 0c2-1.3 2.8-1 2.8-1 .5 1.5.2 2.6.1 2.9.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7 1 .7 2v3c0 .3.2.6.7.5A10 10 0 0 0 12 2z" fill="currentColor" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="container">
+
+  <header class="hero" role="banner">
+    <div class="hero-top">
+      <a class="brand" href="/" aria-label="Quadrama — privater 1:1 Chat">
+        <span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>
+        <span class="brand-name">Quadrama<span class="brand-subtle"> · Privacy Messenger</span></span>
+      </a>
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Sprache">
+          <button class="lang-btn active" id="langDe" type="button" aria-label="Deutsch">DE</button>
+          <button class="lang-btn" id="langEn" type="button" aria-label="English">EN</button>
+        </div>
+        <a href="https://github.com/QuadramaHQ/quadrama-protocol" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="Quellcode auf GitHub">
+          <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg> GitHub
+        </a>
+      </div>
+    </div>
+    <h1 class="hero-claim" data-i18n="heroClaim">Privater 1:1 Chat ohne Konto.</h1>
+    <p class="hero-sub" data-i18n="heroSub">Nachrichten werden im Browser Ende‑zu‑Ende verschlüsselt. Der Relay leitet nur verschlüsselte Daten weiter und speichert keine Chatverläufe.</p>
+    <div class="trust-row" role="list" aria-label="Privacy‑Eigenschaften">
+      <span class="trust-pill" role="listitem"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> <span data-i18n="trustNoAccount">Kein Konto</span></span>
+      <span class="trust-pill" role="listitem"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> <span data-i18n="trustNoPhone">Keine Telefonnummer</span></span>
+      <span class="trust-pill" role="listitem"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> <span data-i18n="trustNoCookies">Keine Cookies</span></span>
+      <span class="trust-pill" role="listitem"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> <span data-i18n="trustE2EE">Browser‑E2EE</span></span>
+      <span class="trust-pill" role="listitem"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> <span data-i18n="trustRelay">Server leitet nur weiter</span></span>
+      <span class="trust-pill" role="listitem"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> <span data-i18n="trustOpenSource">Open Source</span></span>
+    </div>
+  </header>
+
+  <div class="main-grid">
+    <div class="card">
+      <div class="card-header">
+        <span><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg> <span data-i18n="chat">Chat</span></span>
+        <span class="room-indicator"><svg class="icon" aria-hidden="true"><use href="#i-door"/></svg> <span data-i18n="room">Raum</span>: <strong id="roomStatus">—</strong></span>
+      </div>
+      <div class="chat-container">
+        <div class="chat-toolbar">
+          <div class="chat-meta-pills" aria-label="Sicherheitsstatus dieses Chats">
+            <span class="pill"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg> Trust: <span id="trustStatus" class="status-value" data-i18n-id="trustNotConfirmed">nicht bestätigt</span></span>
+            <span class="pill"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> KC: <span id="kcMini">—</span></span>
+            <span class="pill"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg> <span id="statsStatus">—</span></span>
+          </div>
+          <div class="pill-actions">
+            <button id="btnVerify" type="button" class="btn btn-outline" disabled aria-label="Verifizieren"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="verify">Verifizieren</span></button>
+            <button id="btnUnverify" type="button" class="btn btn-outline" disabled aria-label="Verifizierung löschen"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg><span data-i18n="delete">Löschen</span></button>
+            <button id="btnShowSafety" type="button" class="btn btn-outline" disabled aria-label="Sicherheitscode anzeigen"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span data-i18n="showSafety">Safety</span></button>
+          </div>
+        </div>
+        <div id="chatBox" class="chat-box">
+          <div class="chat-empty" data-i18n="chatEmpty">Lade einen Kontakt ein, indem du den 8‑stelligen Raumcode rechts erstellst und teilst. Sobald beide im selben Raum sind, könnt ihr verschlüsselt chatten.</div>
+        </div>
+        <div class="composer">
+          <textarea id="message" data-i18n-placeholder="msgPlaceholder" placeholder="Nachricht schreiben … (Enter zum Senden)" rows="2"></textarea>
+          <button id="btnSend" type="button" class="btn-send" disabled aria-label="Nachricht senden"><svg class="icon" aria-hidden="true"><use href="#i-plane"/></svg> <span data-i18n="send">Senden</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg> <span data-i18n="controlStatus">Status & Aktionen</span></span>
+      </div>
+
+      <!-- One-line status strip replaces the old 6-cell status grid. -->
+      <div class="meta-strip" id="metaStrip" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span><span data-i18n="wsLabel">WebSocket</span>: <strong id="wsStatus" data-i18n-id="disconnected">getrennt</strong></span>
+        <span class="sep" aria-hidden="true">·</span>
+        <span><span data-i18n="myFp">Mein FP</span>: <span id="fpStatus" class="meta-fp">—</span></span>
+        <span class="sep" aria-hidden="true">·</span>
+        <span><span data-i18n="peerFp">Peer FP</span>: <span id="peerFpStatus" class="meta-fp">—</span></span>
+        <!-- Hidden but kept so app.js can still update them without errors. -->
+        <span id="httpStatus" style="display:none">ok</span>
+        <span id="cryptoStatus" style="display:none" data-i18n-id="ready">bereit</span>
+        <span id="safetyStatus" style="display:none">—</span>
+      </div>
+
+      <!-- "So funktioniert es" — slim step rail. -->
+      <ol class="steps" id="stepChecklist" aria-label="Onboarding-Schritte">
+        <li class="checklist-item" id="step1">
+          <span class="step" aria-hidden="true">1</span>
+          <div class="text">
+            <div class="step-title" data-i18n="step1">Identität erstellen</div>
+            <div class="step-desc" data-i18n="step1desc">Erzeugt deinen einzigartigen Schlüssel — nur in diesem Tab.</div>
+          </div>
+        </li>
+        <li class="checklist-item" id="step2">
+          <span class="step" aria-hidden="true">2</span>
+          <div class="text">
+            <div class="step-title" data-i18n="step2">Verbinden</div>
+            <div class="step-desc" data-i18n="step2desc">Verbindet mit dem Quadrama-Server (reiner Relay).</div>
+          </div>
+        </li>
+        <li class="checklist-item" id="step3">
+          <span class="step" aria-hidden="true">3</span>
+          <div class="text">
+            <div class="step-title" data-i18n="step3">Raum erstellen oder beitreten</div>
+            <div class="step-desc" data-i18n="step3desc">Erstelle einen 8-stelligen Raumcode oder gib einen geteilten Code ein.</div>
+          </div>
+        </li>
+        <li class="checklist-item" id="step4">
+          <span class="step" aria-hidden="true">4</span>
+          <div class="text">
+            <div class="step-title" data-i18n="step4">Zweiter Kontakt verbindet sich</div>
+            <div class="step-desc" data-i18n="step4desc">Warte, bis der zweite Kontakt denselben Raumcode eingibt.</div>
+          </div>
+        </li>
+        <li class="checklist-item" id="step5">
+          <span class="step" aria-hidden="true">5</span>
+          <div class="text">
+            <div class="step-title" data-i18n="step5">Sicherheitscode vergleichen + verifizieren</div>
+            <div class="step-desc" data-i18n="step5desc">Vergleiche den Sicherheitscode ausserhalb dieses Chats — z. B. per Anruf oder persönlich.</div>
+          </div>
+        </li>
+        <li class="checklist-item" id="step6">
+          <span class="step" aria-hidden="true">6</span>
+          <div class="text">
+            <div class="step-title" data-i18n="step6">Chatten</div>
+            <div class="step-desc" data-i18n="step6desc">Kanal gesichert — ihr könnt jetzt sicher chatten.</div>
+          </div>
+        </li>
+      </ol>
+
+      <!-- Safety code. Quiet by default; the ".ready" class is added by app.js (or via CSS later) when populated. -->
+      <div class="safety-box" id="safetyBox">
+        <div class="safety-label"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg> <span data-i18n="securityCode">Sicherheitscode</span></div>
+        <div id="safetyCodeDisplay" class="code empty">—</div>
+        <p class="safety-hint" data-i18n="safetyHint">Vergleicht diese 8 Wörter über einen zweiten Kanal — z. B. per Anruf oder persönlich. Stimmen sie exakt überein, sprecht ihr direkt mit derselben Person.</p>
+      </div>
+
+      <!-- Connect & room controls. Inputs styled distinct from buttons. -->
+      <div class="field-row">
+        <button id="btnConnect" type="button" class="btn btn-primary" aria-label="Mit Server verbinden"><svg class="icon" aria-hidden="true"><use href="#i-plug"/></svg> <span data-i18n="connect">Verbinden</span></button>
+        <button id="btnDisconnect" type="button" class="btn btn-outline" disabled aria-label="Vom Server trennen"><svg class="icon" aria-hidden="true"><use href="#i-power"/></svg> <span data-i18n="disconnect">Trennen</span></button>
+        <button id="btnNewRoom" type="button" class="btn btn-outline" disabled aria-label="Neuen Raumcode erzeugen"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg> <span data-i18n="new">Neu</span></button>
+      </div>
+
+      <div class="field-row">
+        <input id="roomCode" type="text" class="input" data-i18n-placeholder="roomCode" placeholder="Raumcode" autocomplete="off" inputmode="latin" aria-label="Raumcode">
+        <button id="btnJoin" type="button" class="btn btn-outline" disabled aria-label="Raum beitreten"><svg class="icon" aria-hidden="true"><use href="#i-sign-in"/></svg> <span data-i18n="join">Beitreten</span></button>
+        <button id="btnLeave" type="button" class="btn btn-outline" disabled aria-label="Raum verlassen"><svg class="icon" aria-hidden="true"><use href="#i-sign-out"/></svg> <span data-i18n="leave">Verlassen</span></button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="field-row">
+        <button id="btnGenerateKeys" type="button" class="btn btn-outline" aria-label="Identität erstellen"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> <span data-i18n="identity">Identität erstellen</span></button>
+        <button id="btnResetAll" type="button" class="btn btn-danger" aria-label="Alles zurücksetzen"><svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg> <span data-i18n="factoryReset">Alles zurücksetzen</span></button>
+        <!-- Backup/Restore deliberately removed from the UI: the ephemeral-identity
+             model relies on the identity NOT surviving a session; exporting it
+             would defeat the design. See TECHNICAL.md §Ephemeral identity. -->
+      </div>
+    </div>
+  </div>
+
+  <!--
+    Hidden DOM hooks. These elements are required by app.js (log(),
+    renderContacts(), wsConnect()…) but are not part of the public visual
+    surface. Keeping them in the DOM as hidden lets the JS keep wiring
+    without surfacing developer/admin UI to ordinary users.
+  -->
+  <div id="devSection" hidden aria-hidden="true">
+    <!-- Relay URL: app.js initWsUrlDefault() rewrites .value to the current origin. -->
+    <input id="wsUrl" type="text" value="wss://quadrama.ch/ws" autocomplete="off">
+    <pre id="log"></pre>
+    <div id="primaryFp">—</div>
+    <div id="primaryStatus">—</div>
+    <div id="primaryFirstSeen">—</div>
+    <div id="primaryLastSeen">—</div>
+    <div id="primaryVerifiedAt">—</div>
+    <pre id="historyList">—</pre>
+  </div>
+
+  <footer class="footer" role="contentinfo">
+    <a href="impressum.html" data-i18n="imprint">Impressum</a>
+    <a href="datenschutz.html" data-i18n="privacy">Datenschutz</a>
+    <a href="https://github.com/QuadramaHQ/quadrama-protocol" target="_blank" rel="noopener noreferrer" data-i18n="footerOpenSource">Open Source</a>
+  </footer>
+  <div class="footer-meta">
+    <span data-i18n="footerTagline">Open Source. Kein Konto. Keine Cookies. Keine Chatverläufe auf dem Server.</span>
+  </div>
+</div>
+
+<script src="./tweetnacl.min.js" integrity="sha256-PsU1wASu6yJXhdjpP7M7+Z9S45m9ffwBlptWKbrqUTE=" crossorigin="anonymous"></script>
+<script src="./i18n.js" integrity="sha256-vBRN+0aPqWN4TV2PXHVgV66J320CFNSw5KdxzvsuN+U=" crossorigin="anonymous"></script>
+<script src="./app.js" integrity="sha384-dXx+4yW8BpZB73JJ0y56l6vJhIUxe8wedwv0j1LoMIjvAjC8+y+hEg9YZf/pi31o" crossorigin="anonymous"></script>
+</body>
+</html>
