@@ -6,7 +6,7 @@ Quadrama is a free, open-source 1:1 end-to-end encrypted messenger that
 runs entirely in the browser. No account, no phone number, no chat
 history on the server.
 
-Live demo: **<https://quadrama.ch>**
+Use Quadrama: https://quadrama.ch/
 
 ---
 
